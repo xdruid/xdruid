@@ -1,7 +1,11 @@
 package org.xdruid.ui;
 
+import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.xdruid.ui.messages.MessageBus;
+import org.xdruid.ui.messages.SimpleMessageBus;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -13,19 +17,21 @@ public abstract class ActivityDispatcher extends Activity implements Dispatcher 
 	private Screen defaultScreen;
 	
 	private LayoutManager layoutManager;
+	private MessageBus messageBus;
 	
 	public Screen getScreen(String name) {
 		return screens.get(name);
 	}
 
-	public void showScreen(String name) throws Exception {
+	public void showScreen(String name, Object dataObject) throws Exception {
 		Screen screen = getScreen(name);
-		showScreen(screen);
+		showScreen(screen, dataObject);
 	}
 	
-	protected void showScreen(Screen screen) throws Exception{
+	protected void showScreen(Screen screen, Object dataObject) throws Exception{
 		if(screen != null &&
 				!screen.isVisible()){
+			prepareScreen(screen, dataObject);
 			int layout = layoutManager.getLayoutId(screen.getCurrenLayoutName());
 			if(layout != 0){
 				currentScreen = screen;
@@ -43,7 +49,7 @@ public abstract class ActivityDispatcher extends Activity implements Dispatcher 
 	protected void hideScreen(Screen screen) throws Exception{
 		if(screen != null &&
 				screen.isVisible()){
-			showScreen(defaultScreen);
+			showScreen(defaultScreen, null);
 			screen.screenHidden();
 		}
 	}
@@ -71,13 +77,42 @@ public abstract class ActivityDispatcher extends Activity implements Dispatcher 
 		initializeDispatcher(savedInstanceState);
 	}
 	
+	protected void prepareScreen(Screen screen, Object dataObject) throws Exception{
+		if(dataObject == null)
+			return;
+		if(!screen.isInitialized()){
+			screen.reloading(dataObject);
+		}else if(!screen.isDestroyed()){
+			screen.initializing(dataObject);
+		}
+	}
+	
+	
 	protected void initializeDispatcher(Bundle savedInstanceState){
-		layoutManager = new DefaultLayoutManager(getWindowManager());
+		layoutManager = getLayoutManagerInstance();
+		messageBus = getMessageBusInstance();
+	}
+	
+	protected LayoutManager getLayoutManagerInstance(){
+		return new DefaultLayoutManager(getWindowManager());
+	}
+	protected MessageBus getMessageBusInstance(){
+		return new SimpleMessageBus();
 	}
 	
 	
 	protected void addScreen(String name, Class<? extends Screen> screenClass) throws Exception{
-		
+		Constructor<? extends Screen> constructor = 
+				screenClass.getConstructor(Activity.class, Dispatcher.class, String.class);
+		Screen screen = constructor.newInstance(this,this, name);
+		addScreen(name, screen);
 	}
 	
+	protected void addScreen(String name, Screen screen) throws Exception{
+		screens.put(name, screen);
+	}
+	
+	public MessageBus bus(){
+		return messageBus;
+	}
 }

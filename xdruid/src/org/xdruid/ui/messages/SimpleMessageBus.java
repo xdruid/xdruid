@@ -7,13 +7,13 @@ import java.util.Map;
 
 import android.os.AsyncTask;
 
-public class AbstractMessageBus implements MessageBus {
+public class SimpleMessageBus implements MessageBus {
 
 	private static int _sequence = 0;
 
 	private Map<String, Map<String, Map<Object, Registration>>> registered = new HashMap<String, Map<String, Map<Object, Registration>>>();
 
-	private Map<String, Registration> perId = new HashMap<String, AbstractMessageBus.Registration>();
+	private Map<String, Registration> perId = new HashMap<String, SimpleMessageBus.Registration>();
 
 	private String getId(String topic, String callback) {
 		return topic + "-" + callback + "-" + _sequence++;
@@ -66,35 +66,54 @@ public class AbstractMessageBus implements MessageBus {
 			return registration.id;
 		}
 
-		registration = new Registration(id, callback, target, source, async);
+		registration = new Registration(id, topic, callback, target, source, async);
 		perCallback.put(target, registration);
 		perId.put(id, registration);
 		return id;
 	}
 
 	public int unsubscribe(String topic, String id, boolean all) {
-		if(!all){
-			
+		if(all){
+			Map<String, Map<Object, Registration>> byTopic = registered.get(topic);
+			if(byTopic != null){
+				int count = 0;
+				for(Map.Entry<String, Map<Object, Registration>> e: byTopic.entrySet()){
+					count += e.getValue().size();
+				}
+				registered.put(topic, null);
+				return count;
+			}
+		}else{
+			Registration registration = perId.get(id);
+			if(registration != null){
+				registered.get(registration.topic)
+					.get(registration.callback)
+						.put(registration.target, null);
+				return 1;
+			}
 		}
 		return 0;
 	}
 
 	private class Registration {
 		public String id;
+		public String topic;
+		public String callback;
 		public Object target;
 		public Object source;
 		public boolean async;
 
 		private Method methodCallback;
 
-		public Registration(String id, String callback,
+		public Registration(String id, String topic, String callback,
 				Object target, Object source, boolean async) throws SecurityException,
 				NoSuchMethodException {
 			this.id = id;
 			this.target = target;
 			this.source = source;
 			this.async = async;
-			
+			this.topic = topic;
+			this.callback = callback;
 			methodCallback = target.getClass().getMethod(callback,
 					String.class, Message.class);
 
