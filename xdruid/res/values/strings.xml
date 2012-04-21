@@ -3,5 +3,6 @@
 
     <string name="hello">Hello World, XdruidActivity!</string>
     <string name="app_name">xdruid</string>
+    <string name="xdruidLogo">xdruid logo</string>
 
 </resources>
