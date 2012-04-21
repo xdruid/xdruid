@@ -90,6 +90,9 @@ public abstract class BaseScreen implements Screen{
 	
 
 	public String getCurrenLayoutName() {
+		if(layout == null){
+			layout = getInitialLayout();
+		}
 		return layout;
 	}
 

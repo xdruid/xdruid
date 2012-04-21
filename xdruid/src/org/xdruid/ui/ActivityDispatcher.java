@@ -4,6 +4,8 @@ import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.xdruid.R;
+import org.xdruid.ui.examples.LogoScreen;
 import org.xdruid.ui.messages.MessageBus;
 import org.xdruid.ui.messages.SimpleMessageBus;
 
@@ -72,15 +74,38 @@ public abstract class ActivityDispatcher extends Activity implements Dispatcher 
 	}
 	
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	protected final void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		initializeDispatcher(savedInstanceState);
+		try{
+			addLayouts();
+			addScreens();
+			initializeScreens();
+			continueOnCreate();
+		}catch (Exception e) {
+			// TODO: Exactry
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private void initializeScreens() throws Exception{
+		if(defaultScreen == null){
+			useDefaultScreen("xdruid.logo");
+			showScreen(defaultScreen, new Object());
+		}
+	}
+	
+	protected void useDefaultScreen(String screenName){
+		Screen screen = getScreen(screenName);
+		if(screen != null){
+			defaultScreen = screen;
+		}
 	}
 	
 	protected void prepareScreen(Screen screen, Object dataObject) throws Exception{
 		if(dataObject == null)
 			return;
-		if(!screen.isInitialized()){
+		if(screen.isInitialized()){
 			screen.reloading(dataObject);
 		}else if(!screen.isDestroyed()){
 			screen.initializing(dataObject);
@@ -115,4 +140,13 @@ public abstract class ActivityDispatcher extends Activity implements Dispatcher 
 	public MessageBus bus(){
 		return messageBus;
 	}
+	
+	protected void addScreens() throws Exception{
+		addScreen("xdruid.logo", LogoScreen.class);
+	}
+	protected void addLayouts() throws Exception{
+		layoutManager.registerDefaultLayout("xdruid.logo", R.layout.xdruid);
+	}
+	
+	protected void continueOnCreate() throws Exception{}
 }
