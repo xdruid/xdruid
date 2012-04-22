@@ -4,9 +4,21 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
-    <TextView
+    <Button
+        android:id="@+id/tabataTimer"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/hello" />
+        android:text="@string/labelButtonTabataTimer" />
+
+    <Button
+        android:id="@+id/timer"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/labelButtonTimer" />
+    <Button
+        android:id="@+id/stopwatch"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/labelButtonStopwatch" />
 
 </LinearLayout>

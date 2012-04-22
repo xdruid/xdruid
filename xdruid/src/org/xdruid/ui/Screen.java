@@ -63,7 +63,9 @@ public interface Screen {
 		 */
 		DESTROYED
 	}
-
+	
+	public void creating() throws Exception;
+	
 	public void initializing(Object domainObject) throws Exception;
 
 	public void destroying() throws Exception;

@@ -13,4 +13,5 @@ public interface Dispatcher {
 	public Screen getCurrentScreen();
 	
 	public MessageBus bus();
+	public LayoutManager getLayoutManager();
 }

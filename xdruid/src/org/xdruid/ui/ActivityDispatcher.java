@@ -14,6 +14,8 @@ import android.os.Bundle;
 
 public abstract class ActivityDispatcher extends Activity implements Dispatcher {
 	
+	public static final String XDRUID_UI_TOPIC = "xdruid.topic.ui";
+	
 	private Map<String, Screen> screens = new HashMap<String, Screen>();
 	private Screen currentScreen;
 	private Screen defaultScreen;
@@ -33,11 +35,17 @@ public abstract class ActivityDispatcher extends Activity implements Dispatcher 
 	protected void showScreen(Screen screen, Object dataObject) throws Exception{
 		if(screen != null &&
 				!screen.isVisible()){
-			prepareScreen(screen, dataObject);
 			int layout = layoutManager.getLayoutId(screen.getCurrenLayoutName());
 			if(layout != 0){
 				currentScreen = screen;
 				setContentView(layout);
+				/*
+				 * altough this may seem illogical,
+				 * the View components will become available
+				 * only after the screen has been created and
+				 * put to front.
+				 */
+				prepareScreen(screen, dataObject);
 				screen.screenVisible();
 			}
 		}
@@ -130,6 +138,7 @@ public abstract class ActivityDispatcher extends Activity implements Dispatcher 
 		Constructor<? extends Screen> constructor = 
 				screenClass.getConstructor(Activity.class, Dispatcher.class, String.class);
 		Screen screen = constructor.newInstance(this,this, name);
+		screen.creating();
 		addScreen(name, screen);
 	}
 	
@@ -144,9 +153,23 @@ public abstract class ActivityDispatcher extends Activity implements Dispatcher 
 	protected void addScreens() throws Exception{
 		addScreen("xdruid.logo", LogoScreen.class);
 	}
-	protected void addLayouts() throws Exception{
+	private void addLayouts() throws Exception{
 		layoutManager.registerDefaultLayout("xdruid.logo", R.layout.xdruid);
+		bindLayouts();
+	}
+	protected void bindLayouts(){};
+	
+	protected void bindLayout(String name, int layoutId, int width, int height){
+		layoutManager.register(name, layoutId, width, height);
+	}
+	
+	protected void bindLayout(String name, int layoutId){
+		layoutManager.registerDefaultLayout(name, layoutId);
 	}
 	
 	protected void continueOnCreate() throws Exception{}
+	
+	public LayoutManager getLayoutManager() {
+		return layoutManager;
+	}
 }

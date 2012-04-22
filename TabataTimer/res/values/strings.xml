@@ -3,5 +3,8 @@
 
     <string name="hello">Hello World, TabataTimerActivity!</string>
     <string name="app_name">TabataTimer</string>
+    <string name="labelButtonTabataTimer">Tabata Timer</string>
+    <string name="labelButtonTimer">Timer</string>
+    <string name="labelButtonStopwatch">Stopwatch</string>
 
 </resources>

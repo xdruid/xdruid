@@ -24,6 +24,10 @@ public abstract class SimpleScreen extends BaseScreen{
 	@Override
 	protected void screenHiding() throws Exception { }
 
+	@Override
+	protected void bindEvents() throws Exception {	}
 	
+	@Override
+	protected void bindLayouts() { }
 
 }

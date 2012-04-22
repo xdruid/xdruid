@@ -3,6 +3,8 @@ package org.xdruid.ui;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.xdruid.ui.messages.Message;
+
 import android.app.Activity;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -28,21 +30,26 @@ public abstract class BaseScreen implements Screen{
 		this.name = name;
 	}
 	
+	public final void creating() throws Exception{
+		bindLayouts();
+		useLayout(getInitialLayout());
+	}
 	
 	public final void initializing(Object domainObject) throws Exception {
 		if(state == State.CREATED){
 			bindViews(parent);
 			initializeViews(parent, dispatcher, domainObject);
-			useLayout(getInitialLayout());
+			bindEvents();
 			continueInitializing();
 			this.state = State.INITIALIZED;
 		}else{
 			throw new IllegalStateException("The Screen not in CREATED state. Already initialized.");
 		}
 	}
-
+	protected abstract void bindLayouts();
 	protected abstract void bindViews(Activity parent) throws Exception;
 	protected abstract void initializeViews(Activity parent, Dispatcher dispatcher, Object domainObject) throws Exception;
+	protected abstract void bindEvents() throws Exception;
 	
 	protected void continueInitializing() throws Exception { }
 	
@@ -122,6 +129,26 @@ public abstract class BaseScreen implements Screen{
 	}
 	
 	
+	protected void bindLayout(String name,int layoutId, int width, int height){
+		dispatcher.getLayoutManager().register(name, layoutId, width, height);
+	}
+	
+	protected void bindLayout(String name, int layoutId){
+		dispatcher.getLayoutManager().registerDefaultLayout(name, layoutId);
+	}
+	
+	protected void trigger(String topic, String name, Object body, Object target) throws Exception{
+		dispatcher.bus().publish(topic, new Message(name, body, this, target));
+	}
+	
+	protected void trigger(String name, Object param, Object target) throws Exception{
+		trigger(ActivityDispatcher.XDRUID_UI_TOPIC, name, param, target);
+	}
+	
+	protected void trigger(String name, Object param) throws Exception{
+		trigger(name, param, null);
+	}
+	
 	protected void on(String eventName, View component, EventCallback callback){
 		if("click".equals(eventName)){
 			component.setOnClickListener(callback);
@@ -148,7 +175,7 @@ public abstract class BaseScreen implements Screen{
 	}
 	
 	
-	protected class Callback{
+	protected static class Callback{
 		public Object target;
 		public String method;
 		
@@ -179,6 +206,9 @@ public abstract class BaseScreen implements Screen{
 			int i = 0;
 			for(Object a:args){
 				types[i]=a.getClass();
+				if(a instanceof View){
+					types[i]=View.class;
+				}
 				i++;
 			}
 			try {
@@ -228,6 +258,11 @@ public abstract class BaseScreen implements Screen{
 		}
 
 		public void onFocusChange(View v, boolean hasFocus) {
+			try {
+				doInvoke(v,hasFocus);
+			} catch (Exception e){
+				// FIXME
+			}
 		}
 
 		public void onCreateContextMenu(ContextMenu menu, View v,
