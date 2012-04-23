@@ -35,7 +35,7 @@ public class MainScreen extends SimpleScreen{
 	}
 	
 	
-	public void reloading(Object domainObject) throws Exception {
+	public void screenReloading(Object domainObject) throws Exception {
 	}
 
 	public Object getValue() {
@@ -59,15 +59,13 @@ public class MainScreen extends SimpleScreen{
 				Toast.LENGTH_SHORT).show();
 	}
 	
-	public void btnTabataTimerClick(View v){
-		Toast.makeText(parent, "Tabata clicked!", 
-				Toast.LENGTH_SHORT).show();
+	public void btnTabataTimerClick(View v) throws Exception{
+		dispatcher.showScreen("tabata.screens.tabata", new Object());
 	}
 	
 	public void btnStopwatchClick(View v){
 		Toast.makeText(parent, "Stopwatch clicked!", 
 				Toast.LENGTH_SHORT).show();
 	}
-	
 	
 }

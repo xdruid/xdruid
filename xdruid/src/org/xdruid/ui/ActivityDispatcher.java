@@ -2,7 +2,10 @@ package org.xdruid.ui;
 
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 
 import org.xdruid.R;
 import org.xdruid.ui.examples.LogoScreen;
@@ -17,6 +20,7 @@ public abstract class ActivityDispatcher extends Activity implements Dispatcher 
 	public static final String XDRUID_UI_TOPIC = "xdruid.topic.ui";
 	
 	private Map<String, Screen> screens = new HashMap<String, Screen>();
+	private History history;
 	private Screen currentScreen;
 	private Screen defaultScreen;
 	
@@ -40,13 +44,13 @@ public abstract class ActivityDispatcher extends Activity implements Dispatcher 
 				currentScreen = screen;
 				setContentView(layout);
 				/*
-				 * altough this may seem illogical,
 				 * the View components will become available
 				 * only after the screen has been created and
 				 * put to front.
 				 */
 				prepareScreen(screen, dataObject);
 				screen.screenVisible();
+				history.add(screen);
 			}
 		}
 	}
@@ -77,6 +81,19 @@ public abstract class ActivityDispatcher extends Activity implements Dispatcher 
 		}
 	}
 
+	
+	public void updateScreen(String name, Object dataObject) throws Exception {
+		Screen screen = getScreen(name);
+		updateScreen(screen, dataObject);
+	}
+	
+	protected void updateScreen(Screen screen, Object dataObject) throws Exception{
+		if(screen != null &&
+				screen.isVisible()){
+			screen.reloading(dataObject);
+		}
+	}
+	
 	public Screen getCurrentScreen() {
 		return currentScreen;
 	}
@@ -124,6 +141,7 @@ public abstract class ActivityDispatcher extends Activity implements Dispatcher 
 	protected void initializeDispatcher(Bundle savedInstanceState){
 		layoutManager = getLayoutManagerInstance();
 		messageBus = getMessageBusInstance();
+		history = getHistoryInstance();
 	}
 	
 	protected LayoutManager getLayoutManagerInstance(){
@@ -172,4 +190,60 @@ public abstract class ActivityDispatcher extends Activity implements Dispatcher 
 	public LayoutManager getLayoutManager() {
 		return layoutManager;
 	}
+	
+	protected History getHistoryInstance(){
+		return new History();
+	}
+	
+	protected class History{
+		private Queue<Screen> history = new LinkedList<Screen>();
+		
+		
+		private int current = -1;
+		private int capacity = 100;
+		
+		
+		public History(int capacity) {
+			this.capacity = capacity;
+		}
+		public History() {}
+		
+		@SuppressWarnings("unchecked")
+		public Screen go(int count){
+			if(history.size() > 0){
+				current += count;
+				if(current < 0){
+					current = 0;
+				}else if(current >= history.size()){
+					current = history.size() - 1;
+				}
+				Screen screen = ((List<Screen>)history).get(current); 
+				return screen;
+			}
+			return null;
+		}
+		
+		public Screen forward(){
+			return go(1);
+		}
+		
+		public Screen back(){
+			return go(-1);
+		}
+		
+		public void add(Screen screen){
+			if(screen.isDestroyed())
+				return;
+			if(capacity > 0){
+				if(history.size() >= capacity){
+					history.poll();
+				}
+				history.add(screen);
+			}else{
+				history.add(screen);
+			}
+			current = history.size()-1;
+		}
+	}
+	
 }

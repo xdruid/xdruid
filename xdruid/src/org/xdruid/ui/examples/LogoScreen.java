@@ -12,7 +12,7 @@ public class LogoScreen extends SimpleScreen{
 		super(parent, dispatcher, name);
 	}
 
-	public void reloading(Object domainObject) throws Exception {	}
+	public void screenReloading(Object domainObject) throws Exception {	}
 
 	public Object getValue() {
 		return null;

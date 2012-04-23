@@ -17,6 +17,7 @@ public abstract class BaseScreen implements Screen{
 	
 	private State state = State.CREATED;
 	private String layout;
+	private boolean layoutHasChanged = true;
 	
 	protected String name;
 	
@@ -37,8 +38,7 @@ public abstract class BaseScreen implements Screen{
 	
 	public final void initializing(Object domainObject) throws Exception {
 		if(state == State.CREATED){
-			bindViews(parent);
-			initializeViews(parent, dispatcher, domainObject);
+			initializeAfterLayoutChange(domainObject);
 			bindEvents();
 			continueInitializing();
 			this.state = State.INITIALIZED;
@@ -65,14 +65,30 @@ public abstract class BaseScreen implements Screen{
 	
 	protected abstract void screenDestroyed() throws Exception;
 	
-
+	public void reloading(Object domainObject) throws Exception {
+		if(layoutHasChanged){
+			initializeAfterLayoutChange(domainObject);
+		}
+		screenReloading(domainObject);
+	}
+	
+	protected abstract void screenReloading(Object dataObejct) throws Exception;
+	
 	public final void screenVisible() throws Exception {
 		if(isDestroyed()){
 			throw new IllegalStateException("Cannot show already DESTROYED Screen.");
 		}else if(state == State.CREATED){
 			throw new IllegalStateException("Too early to show this screen.");
 		}else if(!isVisible()){
+			initializeAfterLayoutChange(getValue());
 			screenShowing();
+		}
+	}
+	
+	private void initializeAfterLayoutChange(Object dataObject) throws Exception{
+		if(layoutHasChanged){
+			bindViews(parent);
+			initializeViews(parent, dispatcher, dataObject);
 		}
 	}
 
@@ -85,6 +101,7 @@ public abstract class BaseScreen implements Screen{
 		}else if(state == State.CREATED){
 			throw new IllegalStateException("Too early to hide this screen.");
 		}else if(!isVisible()){
+			initializeAfterLayoutChange(getValue());
 			screenHiding();
 		}
 	}
@@ -92,6 +109,9 @@ public abstract class BaseScreen implements Screen{
 	protected abstract void screenHiding() throws Exception;
 	protected abstract String getInitialLayout();
 	protected void useLayout(String layout){
+		if(!layout.equals(this.layout)){
+			layoutHasChanged = true;
+		}
 		this.layout = layout;
 	}
 	
