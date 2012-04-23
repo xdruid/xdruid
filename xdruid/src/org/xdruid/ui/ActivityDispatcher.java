@@ -217,7 +217,14 @@ public abstract class ActivityDispatcher extends Activity implements Dispatcher 
 				}else if(current >= history.size()){
 					current = history.size() - 1;
 				}
-				Screen screen = ((List<Screen>)history).get(current); 
+				int step = count > 0 ? 1:-1;
+				Screen screen = ((List<Screen>)history).get(current);
+				while(screen.isDestroyed()){
+					current+=step;
+					if(current < 0 || current >= history.size())
+						break;
+					screen = ((List<Screen>)history).get(current);
+				}
 				return screen;
 			}
 			return null;
