@@ -9,6 +9,7 @@ import java.util.Queue;
 
 import org.xdruid.R;
 import org.xdruid.ui.examples.LogoScreen;
+import org.xdruid.ui.messages.Message;
 import org.xdruid.ui.messages.MessageBus;
 import org.xdruid.ui.messages.SimpleMessageBus;
 
@@ -142,6 +143,27 @@ public abstract class ActivityDispatcher extends Activity implements Dispatcher 
 		layoutManager = getLayoutManagerInstance();
 		messageBus = getMessageBusInstance();
 		history = getHistoryInstance();
+		subscribe();
+	}
+	
+	private void subscribe() {
+		try{
+			messageBus.subscribe("xdruid.ui.history.back", "onHistoryBack", this, null, false);
+			messageBus.subscribe("xdruid.ui.history.forward", "onHistoryForward", this, null, false);
+		}catch (Exception e) {
+			// TODO: yeah..
+		}
+	}
+	
+	public void onHistoryBack(String topic, Message message) throws Exception{
+		Screen screen = history.back();
+		if(screen != null){
+			showScreen(screen, screen.getValue());
+		}
+	}
+	
+	public void onHistoryForward(String topic, Message message){
+		history.forward();
 	}
 	
 	protected LayoutManager getLayoutManagerInstance(){

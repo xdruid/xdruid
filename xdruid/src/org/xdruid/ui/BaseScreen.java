@@ -39,7 +39,6 @@ public abstract class BaseScreen implements Screen{
 	public final void initializing(Object domainObject) throws Exception {
 		if(state == State.CREATED){
 			initializeAfterLayoutChange(domainObject);
-			bindEvents();
 			continueInitializing();
 			this.state = State.INITIALIZED;
 		}else{
@@ -89,6 +88,7 @@ public abstract class BaseScreen implements Screen{
 		if(layoutHasChanged){
 			bindViews(parent);
 			initializeViews(parent, dispatcher, dataObject);
+			bindEvents();
 		}
 	}
 
@@ -161,12 +161,9 @@ public abstract class BaseScreen implements Screen{
 		dispatcher.bus().publish(topic, new Message(name, body, this, target));
 	}
 	
-	protected void trigger(String name, Object param, Object target) throws Exception{
-		trigger(ActivityDispatcher.XDRUID_UI_TOPIC, name, param, target);
-	}
 	
-	protected void trigger(String name, Object param) throws Exception{
-		trigger(name, param, null);
+	protected void trigger(String topic, String name, Object param) throws Exception{
+		trigger(topic, name, param, null);
 	}
 	
 	protected void on(String eventName, View component, EventCallback callback){
@@ -185,6 +182,10 @@ public abstract class BaseScreen implements Screen{
 		}else{
 			onUnknown(eventName, component, callback);
 		}
+	}
+	
+	protected void on(String eventName, int componentId, String callback){
+		on(eventName, parent.findViewById(componentId), callback);
 	}
 	
 	protected void onUnknown(String eventName, View component, EventCallback callback){	}
